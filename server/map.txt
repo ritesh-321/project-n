@@ -1,0 +1,7 @@
+server/
+├── models/
+│   └── News.js
+├── routes/
+│   └── news.js
+├── .env
+├── server.js
