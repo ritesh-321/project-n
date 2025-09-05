@@ -11,18 +11,34 @@ const Main = () => {
   const videoRefs = useRef([]);
 
   useEffect(() => {
-    Promise.all([
-      API.get("/news"),
-      API.get("/news/image"),
-      API.get("/news/video")
-    ])
-    .then(([newsRes, imgRes, vidRes]) => {
-      const textOnly = newsRes.data.filter(n => !n.imageUrl && !n.videoUrl);
-      setTextNews(textOnly);
-      setImageNews(imgRes.data);
-      setVideoNews(vidRes.data);
-    })
-    .catch(err => console.error(err));
+    const fetchNews = async () => {
+      try {
+        const [newsRes, imgRes, vidRes] = await Promise.all([
+          API.get("/news"),
+          API.get("/news/image"),
+          API.get("/news/video")
+        ]);
+
+        // ✅ Ensure each response is an array, else fallback to empty array
+        const allNews = Array.isArray(newsRes?.data) ? newsRes.data : [];
+        const images = Array.isArray(imgRes?.data) ? imgRes.data : [];
+        const videos = Array.isArray(vidRes?.data) ? vidRes.data : [];
+
+        // Filter text-only news safely
+        const textOnly = allNews.filter(item => !item.imageUrl && !item.videoUrl);
+
+        setTextNews(textOnly);
+        setImageNews(images);
+        setVideoNews(videos);
+      } catch (err) {
+        console.error("Error fetching news:", err);
+        setTextNews([]);
+        setImageNews([]);
+        setVideoNews([]);
+      }
+    };
+
+    fetchNews();
   }, []);
 
   const handlePlay = (index) => {
@@ -36,9 +52,9 @@ const Main = () => {
       <Header />
       <Navbar />
       <div className="main-container">
-        <hr/>
+        <hr />
         <div className="top-section">
-          {/* Left Column - Title + Content + Image Grid */}
+          {/* Left Column - Image News */}
           <div className="column left">
             {imageNews.map((img) => (
               <div key={img._id} className="left-grid">
@@ -47,16 +63,17 @@ const Main = () => {
                   <p>{img.content}</p>
                 </div>
                 <div className="left-image">
-                  <img src={img.imageUrl} 
-                  alt={img.title}
-                  loading="lazy"
+                  <img
+                    src={img.imageUrl}
+                    alt={img.title}
+                    loading="lazy"
                   />
                 </div>
               </div>
             ))}
           </div>
 
-          {/* Right Column - Text News (unchanged) */}
+          {/* Right Column - Text News */}
           <div className="column right">
             {textNews.map((news) => (
               <div key={news._id} className="text-item">
@@ -68,29 +85,27 @@ const Main = () => {
         </div>
 
         {/* Bottom Section - Video News */}
-       <div className="video-section">
-  <h2 className="section-heading">Video News</h2>
-  <div className="video-grid">
-    {videoNews.map((video, index) => (
-      <div key={video._id} className="video-item">
-        <div className="video-card">
-         <video
-  controls
-  className="video-player"
-  ref={(el) => (videoRefs.current[index] = el)}
-  onPlay={() => handlePlay(index)}
->
-  <source src={video.videoUrl} type="video/mp4" />
-  Your browser does not support the video tag.
-</video>
+        <div className="video-section">
+          <h2 className="section-heading">Video News</h2>
+          <div className="video-grid">
+            {videoNews.map((video, index) => (
+              <div key={video._id} className="video-item">
+                <div className="video-card">
+                  <video
+                    controls
+                    className="video-player"
+                    ref={(el) => (videoRefs.current[index] = el)}
+                    onPlay={() => handlePlay(index)}
+                  >
+                    <source src={video.videoUrl} type="video/mp4" />
+                    Your browser does not support the video tag.
+                  </video>
+                </div>
+                <h4 className="video-title">{video.title}</h4>
+              </div>
+            ))}
+          </div>
         </div>
-        <h4 className="video-title">{video.title}</h4>
-      </div>
-    ))}
-  </div>
-</div>
-
-        
       </div>
     </>
   );

@@ -4,15 +4,33 @@ import './css/NewsList.css';
 
 const NewsList = () => {
   const [newsList, setNewsList] = useState([]);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    API.get("/news").then((res) => {
-      const filteredNews = res.data.filter(
-        (news) => !news.imageUrl && !news.videoUrl
-      );
-      setNewsList(filteredNews);
-    });
+    const fetchNews = async () => {
+      try {
+        const res = await API.get("/news");
+
+        // ✅ Ensure we always have an array before filtering
+        const allNews = Array.isArray(res?.data) ? res.data : [];
+
+        // Only text news (no image or video)
+        const filteredNews = allNews.filter(
+          (news) => !news.imageUrl && !news.videoUrl
+        );
+
+        setNewsList(filteredNews);
+      } catch (err) {
+        console.error("Error fetching news:", err);
+        setError("Failed to load news.");
+        setNewsList([]); // fallback to empty array
+      }
+    };
+
+    fetchNews();
   }, []);
+
+  if (error) return <div className="error">{error}</div>;
 
   return (
     <div className="container">

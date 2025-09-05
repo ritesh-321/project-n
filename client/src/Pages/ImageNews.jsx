@@ -1,10 +1,8 @@
-import React, { useEffect, useState } from 'react';
-import API from '../api';
-import './cs/Image.css';
+import React, { useEffect, useState } from "react";
+import API from "../api";
 import Header from "../components/Header";
 import Navbar from "../components/Navbar";
-
-const BASE_URL = import.meta.env.VITE_API_URL;
+import "./cs/Image.css";
 
 const ImageNews = () => {
   const [news, setNews] = useState([]);
@@ -13,15 +11,19 @@ const ImageNews = () => {
   useEffect(() => {
     const fetchNews = async () => {
       try {
-        const res = await API.get('/news/image');
-        if (Array.isArray(res.data)) {
+        const res = await API.get("/news/image");
+
+        // ✅ Validate response data
+        if (res && Array.isArray(res.data)) {
           setNews(res.data);
         } else {
-          throw new Error('Invalid data format');
+          console.error("Invalid data received:", res?.data);
+          throw new Error("Invalid data format received from server");
         }
       } catch (err) {
-        console.error('Error fetching image news:', err);
-        setError('Failed to load image news.');
+        console.error("Error fetching image news:", err);
+        setError("Failed to load image news.");
+        setNews([]); // fallback to empty array
       }
     };
 
@@ -37,24 +39,21 @@ const ImageNews = () => {
       <Navbar />
       <div className="news-grid">
         {news.map((item, index) => {
-          // ✅ Prefix backend URL
-          console.log("Image URL from DB:", item.imageUrl);
+          const imageUrl = item?.imageUrl || "";
 
-          const imageUrl = item.imageUrl;
-         // console.log("Image URL:", imageUrl);
-
-         return (
-            <div key={item._id} className={`news-card ${index === 0 ? 'highlight' : ''}`}>
-              <img
-                src={imageUrl}
-                alt={item.title}
-                style={{ width: "100%", borderRadius: "8px" }}
-                className="news-image"
-              />
+          return (
+            <div key={item._id} className={`news-card ${index === 0 ? "highlight" : ""}`}>
+              {imageUrl && (
+                <img
+                  src={imageUrl}
+                  alt={item.title || "News Image"}
+                  style={{ width: "100%", borderRadius: "8px" }}
+                  className="news-image"
+                />
+              )}
               <div className="i-news-content">
-                <span className="i-news-category"></span>
-                <h3 className="i-news-title">{item.title}</h3>
-                <p className="i-news-text">{item.content}</p>
+                <h3 className="i-news-title">{item.title || "Untitled"}</h3>
+                <p className="i-news-text">{item.content || "No content available."}</p>
               </div>
             </div>
           );

@@ -13,14 +13,18 @@
     "axios": "^1.9.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
-    "react-router-dom": "^7.6.0"
-  },
-  "devDependencies": {
-    "@tailwindcss/postcss": "^4.1.13",
+    "react-router-dom": "^7.6.0",
     "@vitejs/plugin-react": "^4.4.1",
+    "@tailwindcss/postcss": "^4.1.13",
     "autoprefixer": "^10.4.21",
     "postcss": "^8.5.3",
     "tailwindcss": "^4.1.7",
-    "vite": "^6.3.5"
+    "vite": "^6.3.5" 
+    
+  },
+  "devDependencies": {
+    
+    
+   
   }
 }
