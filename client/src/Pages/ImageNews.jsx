@@ -1,8 +1,8 @@
-import React, { useEffect, useState } from "react";
-import API from "../api";
+import React, { useEffect, useState } from 'react';
+import API from '../api';
+import './cs/Image.css';
 import Header from "../components/Header";
 import Navbar from "../components/Navbar";
-import "./cs/Image.css";
 
 const ImageNews = () => {
   const [news, setNews] = useState([]);
@@ -11,19 +11,15 @@ const ImageNews = () => {
   useEffect(() => {
     const fetchNews = async () => {
       try {
-        const res = await API.get("/news/image");
-
-        // ✅ Validate response data
-        if (res && Array.isArray(res.data)) {
+        const res = await API.get('/news/image');
+        if (Array.isArray(res.data)) {
           setNews(res.data);
         } else {
-          console.error("Invalid data received:", res?.data);
-          throw new Error("Invalid data format received from server");
+          throw new Error('Invalid data format');
         }
       } catch (err) {
-        console.error("Error fetching image news:", err);
-        setError("Failed to load image news.");
-        setNews([]); // fallback to empty array
+        console.error('Error fetching image news:', err);
+        setError('Failed to load image news.');
       }
     };
 
@@ -39,21 +35,26 @@ const ImageNews = () => {
       <Navbar />
       <div className="news-grid">
         {news.map((item, index) => {
-          const imageUrl = item?.imageUrl || "";
+          // ✅ Use only HTTPS URLs (Cloudinary or remote)
+          const imageUrl = item.imageUrl?.startsWith("http")
+            ? item.imageUrl
+            : "";
 
           return (
-            <div key={item._id} className={`news-card ${index === 0 ? "highlight" : ""}`}>
-              {imageUrl && (
-                <img
-                  src={imageUrl}
-                  alt={item.title || "News Image"}
-                  style={{ width: "100%", borderRadius: "8px" }}
-                  className="news-image"
-                />
-              )}
+            <div
+              key={item._id}
+              className={`news-card ${index === 0 ? 'highlight' : ''}`}
+            >
+              <img
+                src={imageUrl}
+                alt={item.title || "news image"}
+                style={{ width: "100%", borderRadius: "8px" }}
+                className="news-image"
+              />
               <div className="i-news-content">
-                <h3 className="i-news-title">{item.title || "Untitled"}</h3>
-                <p className="i-news-text">{item.content || "No content available."}</p>
+                <span className="i-news-category"></span>
+                <h3 className="i-news-title">{item.title}</h3>
+                <p className="i-news-text">{item.content}</p>
               </div>
             </div>
           );

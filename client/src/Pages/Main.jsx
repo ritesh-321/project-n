@@ -19,12 +19,17 @@ const Main = () => {
           API.get("/news/video")
         ]);
 
-        // ✅ Ensure each response is an array, else fallback to empty array
+        // ✅ Ensure arrays
         const allNews = Array.isArray(newsRes?.data) ? newsRes.data : [];
         const images = Array.isArray(imgRes?.data) ? imgRes.data : [];
         const videos = Array.isArray(vidRes?.data) ? vidRes.data : [];
 
-        // Filter text-only news safely
+        // Debug: log what URLs we actually got
+        console.log("📰 Text News:", allNews);
+        console.log("🖼️ Image URLs:", images.map(i => i.imageUrl));
+        console.log("🎥 Video URLs:", videos.map(v => v.videoUrl));
+
+        // Filter text-only
         const textOnly = allNews.filter(item => !item.imageUrl && !item.videoUrl);
 
         setTextNews(textOnly);
@@ -64,8 +69,8 @@ const Main = () => {
                 </div>
                 <div className="left-image">
                   <img
-                    src={img.imageUrl}
-                    alt={img.title}
+                    src={img.imageUrl?.startsWith("http") ? img.imageUrl : ""}
+                    alt={img.title || "news image"}
                     loading="lazy"
                   />
                 </div>
@@ -97,7 +102,10 @@ const Main = () => {
                     ref={(el) => (videoRefs.current[index] = el)}
                     onPlay={() => handlePlay(index)}
                   >
-                    <source src={video.videoUrl} type="video/mp4" />
+                    <source
+                      src={video.videoUrl?.startsWith("http") ? video.videoUrl : ""}
+                      type="video/mp4"
+                    />
                     Your browser does not support the video tag.
                   </video>
                 </div>

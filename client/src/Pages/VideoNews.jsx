@@ -14,10 +14,11 @@ const VideoNews = () => {
       try {
         const res = await API.get("/news/video");
 
-        // ✅ Ensure we always get an array
         if (res && Array.isArray(res.data)) {
-          // Filter out invalid objects without videoUrl
-          const validVideos = res.data.filter(item => item && item.videoUrl);
+          // ✅ Keep only videos with a valid HTTPS URL
+          const validVideos = res.data.filter(
+            (item) => item?.videoUrl && item.videoUrl.startsWith("http")
+          );
           setNews(validVideos);
         } else {
           console.error("Invalid response for video news:", res);

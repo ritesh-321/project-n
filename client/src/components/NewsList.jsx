@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import API from "../api";
-import './css/NewsList.css';
+import "./css/NewsList.css";
 
 const NewsList = () => {
   const [newsList, setNewsList] = useState([]);
@@ -11,12 +11,12 @@ const NewsList = () => {
       try {
         const res = await API.get("/news");
 
-        // ✅ Ensure we always have an array before filtering
+        // ✅ Always fallback to empty array if response is invalid
         const allNews = Array.isArray(res?.data) ? res.data : [];
 
-        // Only text news (no image or video)
+        // ✅ Only keep text news (ignore images & videos)
         const filteredNews = allNews.filter(
-          (news) => !news.imageUrl && !news.videoUrl
+          (news) => !news?.imageUrl && !news?.videoUrl
         );
 
         setNewsList(filteredNews);
@@ -34,14 +34,14 @@ const NewsList = () => {
 
   return (
     <div className="container">
-      <h2 className="news-heading">Latest News</h2>
+      <h2 className="news-heading">📰 Latest News</h2>
       {newsList.length === 0 ? (
         <p className="no-news">No text-only news available.</p>
       ) : (
         newsList.map((news) => (
           <div key={news._id} className="news-card">
-            <h3 className="news-title">{news.title}</h3>
-            <p className="news-text">{news.content}</p>
+            <h3 className="news-title">{news.title || "Untitled"}</h3>
+            <p className="news-text">{news.content || "No content available."}</p>
           </div>
         ))
       )}
