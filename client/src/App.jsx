@@ -1,14 +1,14 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Home from './Pages/Home';
-import AdminPanel from './pages/AdminPanel';
-import NewsDetails from './pages/NewsDetails';
+import AdminPanel from './Pages/AdminPanel';
+import NewsDetails from './Pages/NewsDetails';
 import ImageNews from './Pages/ImageNews';
 import VideoNews from './Pages/VideoNews';
 import Admin from './pages/Admin';
 import Main from './Pages/Main';
-import Register from "./pages/Register";
-import Login from "./pages/Login";
+import Register from "./Pages/Register";
+import Login from "./Pages/Login";
 import PrivateRoute from "./components/PrivateRoute";
 import { AuthProvider, AuthContext } from "./context/AuthContext";
 import { useContext } from "react";
