@@ -1,19 +1,30 @@
 import express from "express";
 import multer from "multer";
-import path from "path";
 import News from "../models/News.js";
+import { v2 as cloudinary } from "cloudinary";
+import { CloudinaryStorage } from "multer-storage-cloudinary";
 
 const router = express.Router();
 
-// Setup multer for file uploads
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, "uploads/");
+// ------------------- Cloudinary Setup -------------------
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
+
+// ------------------- Multer + Cloudinary Storage -------------------
+const storage = new CloudinaryStorage({
+  cloudinary,
+  params: async (req, file) => {
+    let folder = "news_images";
+    if (file.mimetype.startsWith("video")) folder = "news_videos";
+    return {
+      folder,
+      resource_type: file.mimetype.startsWith("video") ? "video" : "image",
+      public_id: Date.now() + "-" + file.originalname,
+    };
   },
-  filename: (req, file, cb) => {
-    const uniqueName = Date.now() + "-" + file.originalname;
-    cb(null, uniqueName);
-  }
 });
 
 const upload = multer({ storage });
@@ -21,17 +32,10 @@ const upload = multer({ storage });
 // ------------------- POST: Text News -------------------
 router.post("/", async (req, res) => {
   const { title, content } = req.body;
-
-  if (!title || !content) {
-    return res.status(400).json({ error: "Title and content are required." });
-  }
+  if (!title || !content) return res.status(400).json({ error: "Title and content are required." });
 
   try {
-    const newsItem = new News({
-      title,
-      content,
-      type: "text"
-    });
+    const newsItem = new News({ title, content, type: "text" });
     const saved = await newsItem.save();
     res.status(201).json(saved);
   } catch (err) {
@@ -41,19 +45,15 @@ router.post("/", async (req, res) => {
 
 // ------------------- POST: Image News -------------------
 router.post("/image", upload.single("image"), async (req, res) => {
+  if (!req.file) return res.status(400).json({ error: "Image file is required." });
+
   const { title, content } = req.body;
-
-  if (!req.file) {
-    return res.status(400).json({ error: "Image file is required." });
-  }
-
   try {
-    const imageUrl = `${req.protocol}://${req.get("host")}/uploads/${req.file.filename}`;
     const newsItem = new News({
       title,
       content,
       type: "image",
-      imageUrl
+      imageUrl: req.file.path, // Cloudinary URL
     });
     const saved = await newsItem.save();
     res.status(201).json(saved);
@@ -64,19 +64,15 @@ router.post("/image", upload.single("image"), async (req, res) => {
 
 // ------------------- POST: Video News -------------------
 router.post("/video", upload.single("video"), async (req, res) => {
+  if (!req.file) return res.status(400).json({ error: "Video file is required." });
+
   const { title, content } = req.body;
-
-  if (!req.file) {
-    return res.status(400).json({ error: "Video file is required." });
-  }
-
   try {
-    const videoUrl = `${req.protocol}://${req.get("host")}/uploads/${req.file.filename}`;
     const newsItem = new News({
       title,
       content,
       type: "video",
-      videoUrl
+      videoUrl: req.file.path, // Cloudinary URL
     });
     const saved = await newsItem.save();
     res.status(201).json(saved);
@@ -98,17 +94,10 @@ router.get("/", async (req, res) => {
 // ------------------- GET: Only Image News -------------------
 router.get("/image", async (req, res) => {
   try {
-    console.log("✅ /api/news/image route hit");
     const imageNews = await News.find({ type: "image" }).sort({ createdAt: -1 });
-
-    if (!imageNews || imageNews.length === 0) {
-      return res.status(404).json({ error: "No image news found" });
-    }
-
     res.json(imageNews);
   } catch (err) {
-    console.error("❌ Error in /api/news/image route:", err);
-    res.status(500).json({ error: "Server error while fetching image news" });
+    res.status(500).json({ error: err.message });
   }
 });
 
@@ -118,12 +107,11 @@ router.get("/video", async (req, res) => {
     const videoNews = await News.find({ type: "video" }).sort({ createdAt: -1 });
     res.json(videoNews);
   } catch (err) {
-    console.error("Error fetching video news:", err);
-    res.status(500).json({ error: "Failed to fetch video news" });
+    res.status(500).json({ error: err.message });
   }
 });
 
-// ------------------- GET: Filter by Type -------------------
+// ------------------- Other Routes -------------------
 router.get("/type/:type", async (req, res) => {
   try {
     const { type } = req.params;
@@ -134,7 +122,6 @@ router.get("/type/:type", async (req, res) => {
   }
 });
 
-// ------------------- GET: Single News by ID -------------------
 router.get("/:id", async (req, res) => {
   try {
     const news = await News.findById(req.params.id);
@@ -145,16 +132,10 @@ router.get("/:id", async (req, res) => {
   }
 });
 
-// ------------------- PUT: Update News -------------------
 router.put("/:id", async (req, res) => {
   const { title, content } = req.body;
-
   try {
-    const updated = await News.findByIdAndUpdate(
-      req.params.id,
-      { title, content },
-      { new: true }
-    );
+    const updated = await News.findByIdAndUpdate(req.params.id, { title, content }, { new: true });
     if (!updated) return res.status(404).json({ error: "News not found" });
     res.json(updated);
   } catch (err) {
@@ -162,7 +143,6 @@ router.put("/:id", async (req, res) => {
   }
 });
 
-// ------------------- DELETE: Delete News -------------------
 router.delete("/:id", async (req, res) => {
   try {
     const deleted = await News.findByIdAndDelete(req.params.id);
