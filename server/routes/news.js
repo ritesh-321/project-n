@@ -6,24 +6,23 @@ import { CloudinaryStorage } from "multer-storage-cloudinary";
 
 const router = express.Router();
 
-// ------------------- ✅ Cloudinary Setup -------------------
+// ------------------- Cloudinary Setup -------------------
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-// ------------------- ✅ Multer + Cloudinary Storage -------------------
+// ------------------- Multer + Cloudinary Storage -------------------
 const storage = new CloudinaryStorage({
   cloudinary,
   params: async (req, file) => {
     let folder = "news_images";
     if (file.mimetype.startsWith("video")) folder = "news_videos";
-
     return {
       folder,
       resource_type: file.mimetype.startsWith("video") ? "video" : "image",
-      public_id: `${Date.now()}-${file.originalname.split(" ").join("_")}`, // avoid spaces
+      public_id: Date.now() + "-" + file.originalname,
     };
   },
 });
@@ -33,9 +32,7 @@ const upload = multer({ storage });
 // ------------------- POST: Text News -------------------
 router.post("/", async (req, res) => {
   const { title, content } = req.body;
-  if (!title || !content) {
-    return res.status(400).json({ error: "Title and content are required." });
-  }
+  if (!title || !content) return res.status(400).json({ error: "Title and content are required." });
 
   try {
     const newsItem = new News({ title, content, type: "text" });
@@ -48,9 +45,7 @@ router.post("/", async (req, res) => {
 
 // ------------------- POST: Image News -------------------
 router.post("/image", upload.single("image"), async (req, res) => {
-  if (!req.file) {
-    return res.status(400).json({ error: "Image file is required." });
-  }
+  if (!req.file) return res.status(400).json({ error: "Image file is required." });
 
   const { title, content } = req.body;
   try {
@@ -58,7 +53,7 @@ router.post("/image", upload.single("image"), async (req, res) => {
       title,
       content,
       type: "image",
-      imageUrl: req.file.path, // ✅ Cloudinary URL
+      imageUrl: req.file.path, // Cloudinary URL
     });
     const saved = await newsItem.save();
     res.status(201).json(saved);
@@ -69,9 +64,7 @@ router.post("/image", upload.single("image"), async (req, res) => {
 
 // ------------------- POST: Video News -------------------
 router.post("/video", upload.single("video"), async (req, res) => {
-  if (!req.file) {
-    return res.status(400).json({ error: "Video file is required." });
-  }
+  if (!req.file) return res.status(400).json({ error: "Video file is required." });
 
   const { title, content } = req.body;
   try {
@@ -79,7 +72,7 @@ router.post("/video", upload.single("video"), async (req, res) => {
       title,
       content,
       type: "video",
-      videoUrl: req.file.path, // ✅ Cloudinary URL
+      videoUrl: req.file.path, // Cloudinary URL
     });
     const saved = await newsItem.save();
     res.status(201).json(saved);
@@ -118,7 +111,7 @@ router.get("/video", async (req, res) => {
   }
 });
 
-// ------------------- GET by Type -------------------
+// ------------------- Other Routes -------------------
 router.get("/type/:type", async (req, res) => {
   try {
     const { type } = req.params;
@@ -129,7 +122,6 @@ router.get("/type/:type", async (req, res) => {
   }
 });
 
-// ------------------- GET by ID -------------------
 router.get("/:id", async (req, res) => {
   try {
     const news = await News.findById(req.params.id);
@@ -140,15 +132,10 @@ router.get("/:id", async (req, res) => {
   }
 });
 
-// ------------------- UPDATE by ID -------------------
 router.put("/:id", async (req, res) => {
   const { title, content } = req.body;
   try {
-    const updated = await News.findByIdAndUpdate(
-      req.params.id,
-      { title, content },
-      { new: true }
-    );
+    const updated = await News.findByIdAndUpdate(req.params.id, { title, content }, { new: true });
     if (!updated) return res.status(404).json({ error: "News not found" });
     res.json(updated);
   } catch (err) {
@@ -156,7 +143,6 @@ router.put("/:id", async (req, res) => {
   }
 });
 
-// ------------------- DELETE by ID -------------------
 router.delete("/:id", async (req, res) => {
   try {
     const deleted = await News.findByIdAndDelete(req.params.id);
