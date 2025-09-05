@@ -1,10 +1,12 @@
-const jwt = require("jsonwebtoken");
+import jwt from "jsonwebtoken";
 
 const verifyToken = (req, res, next) => {
   const authHeader = req.headers["authorization"];
   const token = authHeader && authHeader.split(" ")[1]; // Bearer <token>
 
-  if (!token) return res.status(401).json({ msg: "No token, authorization denied" });
+  if (!token) {
+    return res.status(401).json({ msg: "No token, authorization denied" });
+  }
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET || "superSecretKey");
@@ -15,4 +17,4 @@ const verifyToken = (req, res, next) => {
   }
 };
 
-module.exports = verifyToken;
+export default verifyToken;
