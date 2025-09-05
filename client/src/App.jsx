@@ -5,7 +5,7 @@ import AdminPanel from './Pages/AdminPanel';
 import NewsDetails from './Pages/NewsDetails';
 import ImageNews from './Pages/ImageNews';
 import VideoNews from './Pages/VideoNews';
-import Admin from './pages/Admin';
+import Admin from './Pages/Admin';
 import Main from './Pages/Main';
 import Register from "./Pages/Register";
 import Login from "./Pages/Login";
