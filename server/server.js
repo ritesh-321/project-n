@@ -13,28 +13,31 @@ dotenv.config();
 
 const app = express();
 
-// Middleware
+// ------------------- Middleware -------------------
 app.use(cors());
 app.use(express.json());
 
-// File uploads (static serve)
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+// ❌ Remove old static uploads serving
+// const __filename = fileURLToPath(import.meta.url);
+// const __dirname = path.dirname(__filename);
+// app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
-// Routes
+// ------------------- API Routes -------------------
 app.use("/api/news", newsRoutes);
 app.use("/api/auth", authRoutes);
 
-// ✅ Serve React frontend in production (Vite → dist)
+// ------------------- Serve React frontend in production -------------------
 if (process.env.NODE_ENV === "production") {
+  const __filename = fileURLToPath(import.meta.url);
+  const __dirname = path.dirname(__filename);
+
   app.use(express.static(path.join(__dirname, "../client/dist")));
   app.get("*", (req, res) => {
     res.sendFile(path.join(__dirname, "../client/dist", "index.html"));
   });
 }
 
-// MongoDB Connection
+// ------------------- MongoDB Connection -------------------
 mongoose
   .connect(process.env.MONGO_URI, {
     useNewUrlParser: true,
@@ -43,6 +46,6 @@ mongoose
   .then(() => console.log("✅ MongoDB connected"))
   .catch((err) => console.error("❌ MongoDB connection error:", err));
 
-// Start Server
+// ------------------- Start Server -------------------
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
